@@ -6,7 +6,7 @@ export default function RephraseScreen({ originalMantra, onBack, onSave, mantraI
 
   const handleRephraseAI = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/rephraseAI', {
+      const response = await fetch('https://mantra-app.onrender.com/api/rephraseAI', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -23,7 +23,7 @@ export default function RephraseScreen({ originalMantra, onBack, onSave, mantraI
 
   const handleRephrase = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/rephrase', {
+      const response = await fetch('https://mantra-app.onrender.com/api/rephrase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -40,7 +40,7 @@ export default function RephraseScreen({ originalMantra, onBack, onSave, mantraI
 
   const handleSave = async () => {
     try {
-      await fetch('http://localhost:4000/api/save', {
+      await fetch('https://mantra-app.onrender.com/api/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: mantraId, text: rephrased })  

@@ -31,7 +31,7 @@ export default function PlayerScreen({ onBackToMenu }) {
       audio.pause();
     } else {
       try {
-        const response = await fetch('http://localhost:4000/api/mantra/audio');
+        const response = await fetch('https://mantra-app.onrender.com/api/mantra/audio');
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
         audio.src = url;

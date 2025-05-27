@@ -4,7 +4,7 @@ export default function MantraScreen({ mantra, setMantra, mantraId, setMantraId,
   const getNewMantra = useCallback(async (afterId = 0) => {
     try {
       if (afterId == null || isNaN(afterId)) afterId = 1;
-      const res = await fetch(`http://localhost:4000/api/mantras/next/${afterId}`);
+      const res = await fetch(`https://mantra-app.onrender.com/api/mantras/next/${afterId}`);
       if (!res.ok) throw new Error("Yeni mantra bulunamadı.");
 
       const data = await res.json();
@@ -20,7 +20,7 @@ export default function MantraScreen({ mantra, setMantra, mantraId, setMantraId,
     if (!mantraId) return;
 
     try {
-      const res = await fetch(`http://localhost:4000/api/mantras/${mantraId}`, {
+      const res = await fetch(`https://mantra-app.onrender.com/api/mantras/${mantraId}`, {
         method: 'DELETE'
       });
 
