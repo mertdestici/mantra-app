@@ -6,6 +6,18 @@ const rephraseText = async (req, res) => {
   if (!text) return res.status(400).json({ error: 'Text is required.' });
 
   try {
+    return res.json({ rephrasedText });
+  } catch (error) {
+    console.error("Rephrase Error:", error);
+    return res.status(500).json({ error: "Rephrasing failed." });
+  }
+};
+
+const rephraseTextAI = async (req, res) => {
+  const { text, rephrasedText } = req.body;
+  if (!text) return res.status(400).json({ error: 'Text is required.' });
+
+  try {
     const rephrased = await smartRephrase(text, rephrasedText);
     return res.json({ rephrased });
   } catch (error) {
@@ -56,4 +68,4 @@ const deleteMantra = (req, res) => {
   });
 };
 
-module.exports = { rephraseText, saveText, getNextMantra, deleteMantra };
+module.exports = { rephraseText, rephraseTextAI, saveText, getNextMantra, deleteMantra };

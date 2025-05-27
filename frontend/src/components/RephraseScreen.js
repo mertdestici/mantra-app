@@ -15,7 +15,7 @@ export default function RephraseScreen({ originalMantra, onBack, onSave, mantraI
          })
       });
       const data = await response.json();
-      setRephrased(data.rephrased || input + ' (rephrased)');
+      setRephrased(data.rephrased || input);
     } catch (error) {
       console.error('Rephrase error:', error);
     }
@@ -32,7 +32,7 @@ export default function RephraseScreen({ originalMantra, onBack, onSave, mantraI
          })
       });
       const data = await response.json();
-      setRephrased(data.rephrased || input + ' (rephrased)');
+      setRephrased(data.rephrased || input);
     } catch (error) {
       console.error('Rephrase error:', error);
     }
