@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { apiUrl } from '../utils/api';
 
 export default function PlayerScreen({ onBackToMenu }) {
   const bgAudioRef = useRef(null);
   const mantraAudioRef = useRef(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
 
   useEffect(() => {
     const bgAudio = bgAudioRef.current;
@@ -25,52 +27,63 @@ export default function PlayerScreen({ onBackToMenu }) {
 
   const toggleMantra = async () => {
     const audio = mantraAudioRef.current;
-    if (!audio) return;
+    if (!audio || isLoadingAudio) return;
 
     if (isPlaying) {
       audio.pause();
-    } else {
-      try {
-        const response = await fetch('https://mantra-app.onrender.com/api/mantra/audio');
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        audio.src = url;
-        await audio.play();
-      } catch (error) {
-        console.error('Mantra sesi yüklenemedi:', error);
-      }
+      setIsPlaying(false);
+      return;
     }
-    setIsPlaying(!isPlaying);
+
+    setIsLoadingAudio(true);
+    try {
+      const response = await fetch(apiUrl('/api/mantra/audio'));
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      audio.src = url;
+      await audio.play();
+      setIsPlaying(true);
+    } catch (error) {
+      console.error('Mantra audio could not be loaded:', error);
+      setIsPlaying(false);
+    } finally {
+      setIsLoadingAudio(false);
+    }
   };
 
   return (
-    <div className="screen-container" style={{ textAlign: 'center', padding: '40px', position: 'relative' }}>
-      <h1 style={{ marginBottom: '30px' }}>🎧 Mantra Player</h1>
-
-      {/* Sağ üst susturma butonu */}
-      <button
-        className="btn rephrase"
-        onClick={toggleMute}
-        style={{ position: 'absolute', top: 20, right: 20 }}
-      >
-        {isMuted ? '🔇' : '🔈'}
-      </button>
-
-      {/* Ortadaki oynat/duraklat butonu */}
-      <button
-        className="btn like"
-        style={{ fontSize: '24px', padding: '20px 40px', marginBottom: '40px' }}
-        onClick={toggleMantra}
-      >
-        {isPlaying ? '⏸ Duraklat' : '▶️ Oynat'}
-      </button>
-
-      {/* Geri dönme butonu */}
-      <div>
-        <button className="btn back" onClick={onBackToMenu}>🔙 Ana Menüye Dön</button>
+    <div className="screen-container player-screen">
+      <div className="screen-header">
+        <div>
+          <p className="eyebrow">Sound Chamber</p>
+          <h1 className="screen-title">Mantra Player</h1>
+          <p className="screen-subtitle">
+            Control the background layers and tap once to hear the latest recording.
+          </p>
+        </div>
+        <button className="btn ghost" onClick={onBackToMenu}>
+          Main Menu
+        </button>
       </div>
 
-      {/* Ses elemanları */}
+      <div className="player-panels">
+        <div className="mantra-card audio-card">
+          <span className="card-title">Background Music</span>
+          <p className="card-value">{isMuted ? 'Muted' : 'Active'}</p>
+          <button className="btn outline" onClick={toggleMute}>
+            {isMuted ? 'Unmute' : 'Mute'}
+          </button>
+        </div>
+
+        <div className="mantra-card audio-card emphasis">
+          <span className="card-title">Mantra Playback</span>
+          <p className="card-value">{isLoadingAudio ? 'Loading' : isPlaying ? 'Playing' : 'Ready'}</p>
+          <button className="btn like" onClick={toggleMantra} disabled={isLoadingAudio}>
+            {isLoadingAudio ? 'Loading...' : isPlaying ? 'Pause' : 'Play'}
+          </button>
+        </div>
+      </div>
+
       <audio ref={bgAudioRef} src="/audio/background.mp3" preload="auto" />
       <audio ref={mantraAudioRef} preload="auto" />
     </div>

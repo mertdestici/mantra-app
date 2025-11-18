@@ -2,10 +2,11 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const dotenv = require('dotenv');
+
+dotenv.config();
+
 const mantraRoutes = require('./routes/mantraRoutes');
 const audioRoutes = require('./routes/audioRoutes');
-
-dotenv.config(); 
 
 const app = express();
 const PORT = process.env.PORT || 4000;

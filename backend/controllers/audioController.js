@@ -1,4 +1,3 @@
-// 📁 controllers/audioController.js
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
@@ -7,42 +6,56 @@ const db = require('../utils/db');
 const TXT_PATH = path.join(__dirname, '../data/mantra.txt');
 const MP3_PATH = path.join(__dirname, '../data/mantra.mp3');
 
-function getAllMantras() {
-  return new Promise((resolve, reject) => {
-    db.all('SELECT content FROM mantras ORDER BY id ASC', [], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows.map(r => r.content));
-    });
-  });
+async function getAllMantras() {
+  const result = await db.query('SELECT content FROM mantras ORDER BY id ASC');
+  return result.rows.map((row) => row.content);
 }
 
 async function ensureMantraTxt(currentMantras) {
+  let fileChanged = false;
+  const newContent = currentMantras.join('\n');
+
   if (!fs.existsSync(TXT_PATH)) {
-    fs.writeFileSync(TXT_PATH, currentMantras.join('. '), 'utf-8');
-    return;
+    fs.writeFileSync(TXT_PATH, newContent, 'utf-8');
+    return { fileChanged: true };
   }
 
-  const fileLines = fs.readFileSync(TXT_PATH, 'utf-8').split('\n');
-  let mismatchIndex = fileLines.findIndex((line, i) => line !== currentMantras[i]);
-  if (mismatchIndex === -1 && fileLines.length === currentMantras.length) return;
+  const existingLines = fs
+    .readFileSync(TXT_PATH, 'utf-8')
+    .split(/\r?\n/);
+  while (existingLines.length && existingLines[existingLines.length - 1] === '') {
+    existingLines.pop();
+  }
 
-  const updatedLines = currentMantras.slice(0, currentMantras.length);
-  fs.writeFileSync(TXT_PATH, updatedLines.join('\n'), 'utf-8');
+  const needsRewrite =
+    existingLines.length !== currentMantras.length ||
+    currentMantras.some((line, index) => existingLines[index] !== line);
+
+  if (needsRewrite) {
+    fs.writeFileSync(TXT_PATH, newContent, 'utf-8');
+    fileChanged = true;
+  }
+
+  return { fileChanged };
 }
 
 async function generateMp3FromText(text) {
-  const response = await axios.post('https://api.openai.com/v1/audio/speech', {
-    model: 'gpt-4o-mini-tts',
-    input: text,
-    voice: 'alloy',
-    instruction: 'Be more calm and wait 3 seconds after each sentences'
-  }, {
-    headers: {
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      'Content-Type': 'application/json'
+  const response = await axios.post(
+    'https://api.openai.com/v1/audio/speech',
+    {
+      model: 'gpt-4o-mini-tts',
+      input: text,
+      voice: 'alloy',
+      instruction: 'Be more calm and wait 3 seconds after each sentences'
     },
-    responseType: 'stream'
-  });
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      responseType: 'stream'
+    }
+  );
 
   const writer = fs.createWriteStream(MP3_PATH);
   response.data.pipe(writer);
@@ -56,9 +69,10 @@ async function generateMp3FromText(text) {
 async function streamMantraAudio(req, res) {
   try {
     const mantras = await getAllMantras();
-    await ensureMantraTxt(mantras);
+    const { fileChanged = false } = (await ensureMantraTxt(mantras)) || {};
 
-    if (!fs.existsSync(MP3_PATH)) {
+    const shouldRegenerateAudio = fileChanged || !fs.existsSync(MP3_PATH);
+    if (shouldRegenerateAudio) {
       const message = mantras.join('. ... ') + '.';
       await generateMp3FromText(message);
     }
