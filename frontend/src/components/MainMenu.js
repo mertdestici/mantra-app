@@ -2,13 +2,28 @@ import React from 'react';
 
 export default function MainMenu({ onGoToMantra, onGoToPlayer }) {
   return (
-    <div className="screen-container" style={{ textAlign: 'center', padding: '50px' }}>
-      <h1 className="mantra-text" style={{ fontSize: '32px', marginBottom: '40px' }}>
-        Sertlaç Mantra App
-      </h1>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '300px', margin: '0 auto' }}>
-        <button className="btn like" onClick={onGoToMantra}>🧘 Go to Mantras</button>
-        <button className="btn rephrase" onClick={onGoToPlayer}>🎧 Go to Player</button>
+    <div className="screen-container main-menu">
+      <div className="screen-header">
+        <div>
+          <p className="eyebrow">Mantra Studio</p>
+          <h1 className="screen-title">Design your ritual</h1>
+          <p className="screen-subtitle">
+            Discover mantras that feed your mind, rest in the sound chamber, and rebuild your words with
+            intention.
+          </p>
+        </div>
+      </div>
+
+
+      <div className="menu-actions">
+        <button className="btn like wide" onClick={onGoToMantra}>
+          <span>Mantra Flow</span>
+          <span className="btn-subtext">Receive new suggestions and pick your favorites</span>
+        </button>
+        <button className="btn rephrase wide" onClick={onGoToPlayer}>
+          <span>Sound Chamber</span>
+          <span className="btn-subtext">Meditation music and mantra recordings</span>
+        </button>
       </div>
     </div>
   );

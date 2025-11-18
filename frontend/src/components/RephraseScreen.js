@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiUrl } from '../utils/api';
 
 export default function RephraseScreen({ originalMantra, onBack, onSave, mantraId }) {
   const [input, setInput] = useState('');
@@ -6,13 +7,13 @@ export default function RephraseScreen({ originalMantra, onBack, onSave, mantraI
 
   const handleRephraseAI = async () => {
     try {
-      const response = await fetch('https://mantra-app.onrender.com/api/rephraseAI', {
+      const response = await fetch(apiUrl('/api/rephraseAI'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           text: originalMantra,
           rephrasedText: input
-         })
+        })
       });
       const data = await response.json();
       setRephrased(data.rephrased || input);
@@ -23,13 +24,13 @@ export default function RephraseScreen({ originalMantra, onBack, onSave, mantraI
 
   const handleRephrase = async () => {
     try {
-      const response = await fetch('https://mantra-app.onrender.com/api/rephrase', {
+      const response = await fetch(apiUrl('/api/rephrase'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           text: originalMantra,
           rephrasedText: input
-         })
+        })
       });
       const data = await response.json();
       setRephrased(data.rephrased || input);
@@ -40,10 +41,10 @@ export default function RephraseScreen({ originalMantra, onBack, onSave, mantraI
 
   const handleSave = async () => {
     try {
-      await fetch('https://mantra-app.onrender.com/api/save', {
+      await fetch(apiUrl('/api/save'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: mantraId, text: rephrased })  
+        body: JSON.stringify({ id: mantraId, text: rephrased })
       });
       onSave(rephrased);
     } catch (error) {
@@ -52,20 +53,46 @@ export default function RephraseScreen({ originalMantra, onBack, onSave, mantraI
   };
 
   return (
-    <div className="screen-container">
-      <h1 className="mantra-text">{rephrased}</h1>
-      <textarea
-        className="mantra-input"
-        rows="4"
-        placeholder="Write your version here or write "
-        value={input}
-        onChange={e => setInput(e.target.value)}
-      />
-      <div className="button-group">
-        <button className="btn rephrase" onClick={handleRephrase}>🔄 Rephrase</button>
-        <button className="btn rephrase" onClick={handleRephraseAI}>🔄 Rephrase with AI</button>
-        <button className="btn save" onClick={handleSave}>💾 Save</button>
-        <button className="btn back" onClick={onBack}>🔙 Back</button>
+    <div className="screen-container rephrase-screen">
+      <div className="screen-header">
+        <div>
+          <p className="eyebrow">Editor</p>
+          <h1 className="screen-title">Personalize your mantra</h1>
+          <p className="screen-subtitle">
+            Infuse your own language, then save to make the mantra flow entirely yours.
+          </p>
+        </div>
+        <button className="btn ghost" onClick={onBack}>
+          Return to Flow
+        </button>
+      </div>
+
+      <div className="mantra-card">
+        <p className="mantra-text">{rephrased || originalMantra}</p>
+      </div>
+
+      <div className="textarea-wrapper">
+        <label htmlFor="rephrase-input">Your version</label>
+        <textarea
+          id="rephrase-input"
+          className="mantra-input"
+          rows="4"
+          placeholder="Adjust the tone, shorten the rhythm, or add new words."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+      </div>
+
+      <div className="action-bar center">
+        <button className="btn rephrase" onClick={handleRephrase}>
+          Rephrase
+        </button>
+        <button className="btn rephrase" onClick={handleRephraseAI}>
+          Rephrase with AI
+        </button>
+        <button className="btn save" onClick={handleSave}>
+          Save
+        </button>
       </div>
     </div>
   );

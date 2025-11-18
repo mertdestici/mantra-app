@@ -3,21 +3,24 @@ import MainMenu from './components/MainMenu';
 import MantraScreen from './components/MantraScreen';
 import RephraseScreen from './components/RephraseScreen';
 import PlayerScreen from './components/PlayerScreen';
+import AddMantraScreen from './components/AddMantraScreen';
 import './App.css';
-
 
 export default function App() {
   const [screen, setScreen] = useState('menu');
   const [currentMantra, setCurrentMantra] = useState('');
-  const [currentMantraId, setCurrentMantraId] = useState(null); // ilk başta ID boş
+  const [currentMantraId, setCurrentMantraId] = useState(null); // no mantra selected initially
+
+  const handleMantraCreated = (newMantra) => {
+    setCurrentMantra(newMantra.content);
+    setCurrentMantraId(newMantra.id);
+    setScreen('mantra');
+  };
 
   return (
     <div className="app-container">
       {screen === 'menu' && (
-        <MainMenu
-          onGoToMantra={() => setScreen('mantra')}
-          onGoToPlayer={() => setScreen('player')}
-        />
+        <MainMenu onGoToMantra={() => setScreen('mantra')} onGoToPlayer={() => setScreen('player')} />
       )}
 
       {screen === 'mantra' && (
@@ -28,6 +31,7 @@ export default function App() {
           setMantraId={setCurrentMantraId}
           onRephrase={() => setScreen('rephrase')}
           onBackToMenu={() => setScreen('menu')}
+          onAddNewMantra={() => setScreen('addMantra')}
         />
       )}
 
@@ -43,9 +47,11 @@ export default function App() {
         />
       )}
 
-      {screen === 'player' && (
-        <PlayerScreen onBackToMenu={() => setScreen('menu')} />
+      {screen === 'addMantra' && (
+        <AddMantraScreen onBack={() => setScreen('mantra')} onCreated={handleMantraCreated} />
       )}
+
+      {screen === 'player' && <PlayerScreen onBackToMenu={() => setScreen('menu')} />}
     </div>
   );
 }
