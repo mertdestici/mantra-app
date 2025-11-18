@@ -4,6 +4,7 @@ import MantraScreen from './components/MantraScreen';
 import RephraseScreen from './components/RephraseScreen';
 import PlayerScreen from './components/PlayerScreen';
 import AddMantraScreen from './components/AddMantraScreen';
+import AllMantrasScreen from './components/AllMantrasScreen';
 import './App.css';
 
 export default function App() {
@@ -20,7 +21,11 @@ export default function App() {
   return (
     <div className="app-container">
       {screen === 'menu' && (
-        <MainMenu onGoToMantra={() => setScreen('mantra')} onGoToPlayer={() => setScreen('player')} />
+        <MainMenu
+          onGoToMantra={() => setScreen('mantra')}
+          onGoToPlayer={() => setScreen('player')}
+          onGoToAll={() => setScreen('allMantras')}
+        />
       )}
 
       {screen === 'mantra' && (
@@ -50,6 +55,8 @@ export default function App() {
       {screen === 'addMantra' && (
         <AddMantraScreen onBack={() => setScreen('mantra')} onCreated={handleMantraCreated} />
       )}
+
+      {screen === 'allMantras' && <AllMantrasScreen onBack={() => setScreen('menu')} />}
 
       {screen === 'player' && <PlayerScreen onBackToMenu={() => setScreen('menu')} />}
     </div>
