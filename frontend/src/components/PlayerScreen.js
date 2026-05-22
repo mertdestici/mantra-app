@@ -1,6 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { apiUrl } from '../utils/api';
 
+const BREAK_STORAGE_KEY = 'mantraBreakSeconds';
+const MIN_BREAK = 1;
+const MAX_BREAK = 15;
+const DEFAULT_BREAK = 10;
+
+function readStoredBreak() {
+  const stored = Number(localStorage.getItem(BREAK_STORAGE_KEY));
+  if (Number.isInteger(stored) && stored >= MIN_BREAK && stored <= MAX_BREAK) {
+    return stored;
+  }
+  return DEFAULT_BREAK;
+}
+
 export default function PlayerScreen({ onBackToMenu }) {
   const bgAudioRef = useRef(null);
   const mantraAudioRef = useRef(null);
@@ -14,6 +27,8 @@ export default function PlayerScreen({ onBackToMenu }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
+  const [breakSeconds, setBreakSeconds] = useState(readStoredBreak);
+  const [breakInput, setBreakInput] = useState(() => String(readStoredBreak()));
 
   useEffect(() => {
     const bgAudio = bgAudioRef.current;
@@ -66,11 +81,37 @@ export default function PlayerScreen({ onBackToMenu }) {
     }
   };
 
+  // The cached audio belongs to a specific break value; once the break
+  // changes the loaded blob is stale and must be re-fetched before playback.
+  const invalidateLoadedAudio = () => {
+    const audio = mantraAudioRef.current;
+    if (audio) {
+      audio.pause();
+    }
+    setIsPlaying(false);
+    setAudioReady(false);
+    setCurrentTime(0);
+    setDuration(0);
+  };
+
+  const commitBreak = () => {
+    const parsed = Number(breakInput);
+    const next = Number.isInteger(parsed)
+      ? Math.min(MAX_BREAK, Math.max(MIN_BREAK, parsed))
+      : breakSeconds;
+    setBreakInput(String(next));
+    if (next !== breakSeconds) {
+      setBreakSeconds(next);
+      localStorage.setItem(BREAK_STORAGE_KEY, String(next));
+      invalidateLoadedAudio();
+    }
+  };
+
   const loadMantraAudio = async () => {
     setIsLoadingAudio(true);
     setErrorMessage('');
     try {
-      const response = await fetch(apiUrl('/api/mantra/audio'));
+      const response = await fetch(apiUrl(`/api/mantra/audio?break=${breakSeconds}`));
       if (!response.ok) throw new Error('Unable to fetch mantra audio.');
 
       const blob = await response.blob();
@@ -193,6 +234,24 @@ export default function PlayerScreen({ onBackToMenu }) {
           <p className="card-value">
             {isLoadingAudio ? 'Loading' : isPlaying ? 'Playing' : audioReady ? 'Ready' : 'Idle'}
           </p>
+
+          <div className="break-control">
+            <label htmlFor="break-input">Break between mantras (sec)</label>
+            <input
+              id="break-input"
+              className="break-input"
+              type="number"
+              min={MIN_BREAK}
+              max={MAX_BREAK}
+              step="1"
+              value={breakInput}
+              onChange={(event) => setBreakInput(event.target.value)}
+              onBlur={commitBreak}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') event.target.blur();
+              }}
+            />
+          </div>
 
           <div className="player-progress">
             <span className="timestamp">{formatTime(currentTime)}</span>
