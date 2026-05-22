@@ -29,7 +29,7 @@ Key modules:
 - **Main Menu:** entry point with shortcuts to mantra flow and audio player.
 - **Mantra Screen:** fetches sequential mantras, lets users discard, rewrite, or add new ones.
 - **Rephrase Screen:** provides manual editing and optional AI-powered rephrasing.
-- **Player Screen:** fetches OpenAI TTS audio for the latest mantra with background ambience.
+- **Player Screen:** fetches Amazon Polly TTS audio for the latest mantra with background ambience.
 - **Backend:** Express API handling mantra CRUD, AI rephrase requests, and audio generation.
 
 ---
@@ -38,7 +38,7 @@ Key modules:
 
 - 🎯 **Daily Flow:** Step through mantras in order with “Next”, “Rewrite”, “Remove”, and “Add New” actions.
 - ✍️ **Rephrase Workspace:** Edit mantras manually or call AI helpers; save changes back to the DB.
-- 🔊 **Audio Player:** Streams an MP3 synthesized from the current mantra using OpenAI’s TTS.
+- 🔊 **Audio Player:** Streams an MP3 synthesized from the mantra library using Amazon Polly TTS.
 - 🗂️ **Neon/Postgres Persistence:** Reliable storage across deployments; supports both dev/prod URLs.
 - 🧩 **Configurable API Base:** Frontend fetches automatically switch between local backend and production.
 - 📦 **Utility Scripts:** `loadMantras.js` seeds the DB or exports all rows to text.
@@ -51,10 +51,10 @@ Key modules:
 | ---------- | -------------------------------------------------------------------------------- |
 | Frontend   | React (CRA), custom CSS (`App.css`), functional components                        |
 | State Mgmt | Local component state (React hooks)                                              |
-| Backend    | Node.js, Express, Axios, OpenAI SDK                                             |
+| Backend    | Node.js, Express, Axios, OpenAI SDK, AWS SDK (Polly)                            |
 | Database   | Neon PostgreSQL via `pg` pool (dev/prod URLs + SSL detection)                    |
 | Styling    | Glassmorphism-inspired styles in `frontend/src/App.css`                         |
-| Audio      | OpenAI `gpt-4o-mini-tts` streaming to `backend/data/mantra.mp3`                  |
+| Audio      | Amazon Polly (`Ruth`, neural) synthesized from SSML to `backend/data/mantra.mp3` |
 
 Directory split:
 
@@ -108,6 +108,9 @@ The frontend proxies API calls based on `REACT_APP_API_BASE`. Set it to `http://
 OPENAI_API_KEY=sk-...
 DATABASE_URL_DEV=postgresql://... (Neon dev connection string)
 DATABASE_URL_PROD=postgresql://... (Neon prod connection string)
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
 PORT=4000
 ```
 
@@ -115,6 +118,10 @@ Optional:
 
 - `DATABASE_URL` – fallback if you only have one URL.
 - `DB_SSL=true` – forces SSL regardless of environment.
+
+`OPENAI_API_KEY` powers the AI rephrase helper. `AWS_*` credentials power audio
+generation via Amazon Polly — the IAM principal needs the `polly:SynthesizeSpeech`
+permission.
 
 ### Frontend (`frontend/.env`)
 
@@ -169,7 +176,8 @@ All routes expect/return JSON except `/mantra/audio` (which streams an MP3 file)
    - Serve static files or deploy separately (e.g., Render Web Service, Vercel, Netlify).
 
 4. **Audio Regeneration**
-   - `audioController` monitors `mantra.txt`. If a new mantra set is written (or the MP3 is missing), it calls OpenAI again.
+   - `audioController` builds an SSML document (`data/mantra.ssml`) from the whole mantra library, inserting a 10-second `<break>` after each mantra.
+   - If that SSML changes (or the MP3 is missing), it re-synthesizes the MP3 with Amazon Polly.
 
 ---
 
@@ -181,7 +189,7 @@ mantra-app/
 │   ├── controllers/        # mantra + audio controllers
 │   ├── routes/             # Express routes
 │   ├── utils/              # db pool, AI mocks
-│   ├── data/               # generated mantra.txt / mantra.mp3
+│   ├── data/               # generated mantra.ssml / mantra.mp3
 │   └── server.js           # Express entry
 ├── frontend/
 │   ├── src/
