@@ -14,6 +14,9 @@
 # production
 /build
 
+# generated audio cache
+/backend/data/audio-cache/
+
 # misc
 .DS_Store
 .env.local

@@ -509,6 +509,38 @@ body {
   background-clip: text;
 }
 
+/* ── Break control ───────────────────────────────────────────────────────── */
+.break-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.break-control label {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.break-input {
+  width: 72px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: var(--border-thick);
+  background: var(--surface-card);
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  box-shadow: var(--shadow-clay-sm);
+  outline: none;
+}
+
 /* ── Progress bar ────────────────────────────────────────────────────────── */
 .player-progress {
   display: flex;
