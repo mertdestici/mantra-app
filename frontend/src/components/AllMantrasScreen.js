@@ -50,9 +50,9 @@ export default function AllMantrasScreen({ onBack }) {
 
       {!isLoading && !error && (
         <div className="mantra-grid">
-          {mantras.map((item) => (
+          {mantras.map((item, index) => (
             <div key={item.id} className="mantra-chip">
-              <div className="chip-id">#{item.id}</div>
+              <div className="chip-id">#{index + 1}</div>
               <div className="chip-content">{item.content}</div>
             </div>
           ))}
